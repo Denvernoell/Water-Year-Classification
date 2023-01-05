@@ -127,6 +127,10 @@ def plot_location(location):
 		)
 
 	fig = go.Figure(data=fig1.data + fig2.data)
+	
+	if location.reconstructed_df.shape[0] <35:
+		fig.update_xaxes(dtick="Y1",tickformat="%Y")
+
 	# only show Index on hover
 	# fig.update_traces(hovertemplate=)
 
