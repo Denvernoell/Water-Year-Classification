@@ -29,14 +29,18 @@ abbrs = {
 	"C":"Critical Year",
 	}
 class Location:
-	def __init__(self, name, reconstructed_cols,forecast_cols):
+	def __init__(self, name, reconstructed_cols,forecast_cols,years):
 		self.name = name
 		self.reconstructed_cols = reconstructed_cols
 		self.forecast_cols = forecast_cols
 		self.tables = get_tables()
+
+		filter_years = lambda df: df.loc[(df['Water Year'] >= years[0]) & (df['Water Year'] <= years[1])]
+		
 		try:
-			self.forecast()
-			self.reconstructed()
+			self.reconstructed_df = self.reconstructed().pipe(filter_years)
+			self.forecast_df = self.forecast().pipe(filter_years)
+
 		except Exception as e:
 			st.error(f"Error loading data for {self.name}\n{e}")
 			
@@ -59,7 +63,7 @@ class Location:
 
 			data['Year type'] = data['Year type'].pipe(lambda x: x.str.strip().map(abbrs))
 
-			self.reconstructed_df = data
+			return data
 		except Exception as e:
 			st.error(f"Error loading data for {self.name}\n{e}")
 			st.markdown(table_text)
@@ -76,7 +80,7 @@ class Location:
 			data.columns = ["Water Year",'Index','Year type']
 			data = data.astype({'Water Year':'int','Index':'float64','Year type':'string'})
 			data['Year type'] = data['Year type'].pipe(lambda x: x.str.strip().map(abbrs))
-			self.forecast_df = data
+			return data
 		except Exception as e:
 			st.error(f"Error loading data for {self.name}\n{e}")
 			st.markdown(table_text)
@@ -84,7 +88,9 @@ class Location:
 
 def plot_location(location):
 	# https://plotly.com/python/time-series/#displaying-period-data
-		
+	# st.markdown(y_max)
+
+
 	fig1 = px.bar(
 		location.reconstructed_df,
 		x='Water Year',
@@ -121,16 +127,20 @@ def display_elements(location):
 		st.dataframe(location.forecast_df.style.format(subset=['Index'], formatter="{:.2f}"))
 
 st.title('California Water Supply Index')
+# water_years = self.reconstructed_df['Water Year']
+# water_years = [1900,2025]
+y_max, y_min = 1900,2025
+# y_max, y_min = int(water_years.max()), int(water_years.min())
+years = st.slider('Water Year',min_value=y_min,max_value=y_max,value=[y_min,y_max])
+
 SJ_tab,SV_tab = st.tabs(['San Joaquin Valley','Sacramento Valley'])
-
-
 with SJ_tab:
-	SJ = Location('San Joaquin Valley',reconstructed_cols=[0,7,8,9,10,11],forecast_cols=[0,13,15])
-	display_elements(SJ)
+	L = Location('San Joaquin Valley',reconstructed_cols=[0,7,8,9,10,11],forecast_cols=[0,13,15],years=years)
+	display_elements(L)
 	
 
 with SV_tab:
-	SV = Location('Sacramento Valley',reconstructed_cols=[0,1,2,3,4,5],forecast_cols=[0,4,6])
-	display_elements(SV)
+	L = Location('Sacramento Valley',reconstructed_cols=[0,1,2,3,4,5],forecast_cols=[0,4,6],years=years)
+	display_elements(L)
 
 st.markdown(f"Original data: [California Department of Water Resources]({url})")
