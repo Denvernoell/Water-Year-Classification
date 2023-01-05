@@ -13,6 +13,13 @@ pres = soup.find_all('pre')
 T = pres[0]
 brs = T.string.split('\r\n\r\n')
 
+abbrs = {
+	"W":"Wet Year",
+	"AN":"Above Normal Year",
+	"BN":"Below Normal Year",
+	"D":"Dry Year",
+	"C":"Critical Year",
+	}
 class Location:
 	def __init__(self, name, reconstructed_cols,forecast_cols):
 		self.name = name
@@ -32,13 +39,6 @@ class Location:
 		data.columns = ["Water Year",'Oct-Mar','Apr-Jul','WYsum','Index','Year type']
 		data = data.astype({'Water Year':'int','Oct-Mar':'float64','Apr-Jul':'float64','WYsum':'float64','Index':'float64','Year type':'string'})
 
-		abbrs = {
-			"W":"Wet Year",
-			"AN":"Above Normal Year",
-			"BN":"Below Normal Year",
-			"D":"Dry Year",
-			"C":"Critical Year",
-			}
 		data['Year type'] = data['Year type'].pipe(lambda x: x.str.strip().map(abbrs))
 
 		self.reconstructed_df = data
@@ -52,7 +52,7 @@ class Location:
 		data = df.iloc[:,self.forecast_cols]
 		data.columns = ["Water Year",'Index','Year type']
 		data = data.astype({'Water Year':'int','Index':'float64','Year type':'string'})
-		# data['Index'] = data['Index']
+		data['Year type'] = data['Year type'].pipe(lambda x: x.str.strip().map(abbrs))
 		self.forecast_df = data
 		
 
@@ -104,6 +104,17 @@ def plot_location(location):
 	fig = go.Figure(data=fig1.data + fig2.data)
 	return fig
 
+def display_elements(location):
+	st.plotly_chart(plot_location(location),use_container_width=True)
+	
+	col1,col2 = st.columns(2)
+	with col1:
+		st.markdown(f"## Reconstructed Values")
+		st.dataframe(location.reconstructed_df.style.format(subset=['Oct-Mar','Apr-Jul','WYsum','Index'], formatter="{:.2f}"))
+
+	with col2:
+		st.markdown(f"## Forecast Values")
+		st.dataframe(location.forecast_df.style.format(subset=['Index'], formatter="{:.2f}"))
 
 
 SV = Location('Sacramento Valley',reconstructed_cols=[0,1,2,3,4,5],forecast_cols=[0,4,6])
@@ -115,10 +126,14 @@ st.set_page_config(
 		page_icon="🌊",
 	)
 st.title('California Water Supply Index')
-
 SJ_tab,SV_tab = st.tabs(['San Joaquin Valley','Sacramento Valley'])
 
+
 with SJ_tab:
-	st.plotly_chart(plot_location(SJ),use_container_width=True)
+	display_elements(SJ)
+	
+
 with SV_tab:
-	st.plotly_chart(plot_location(SV),use_container_width=True)
+	display_elements(SV)
+
+st.markdown(f"Original data: [California Department of Water Resources]({url})")
