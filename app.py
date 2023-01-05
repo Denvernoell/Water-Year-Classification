@@ -89,6 +89,13 @@ class Location:
 def plot_location(location):
 	# https://plotly.com/python/time-series/#displaying-period-data
 	# st.markdown(y_max)
+	water_year_colors = {
+		"Wet Year": "blue",
+		"Above Normal Year": "green",
+		"Below Normal Year": "purple",
+		"Dry Year": "orange",
+		"Critical Year": "red",
+		}
 
 
 	fig1 = px.bar(
@@ -97,6 +104,8 @@ def plot_location(location):
 		y='Index',
 		color="Year type",
 		# symbol="point_id",
+		color_discrete_map=water_year_colors,
+		
 		
 	)
 
@@ -106,12 +115,23 @@ def plot_location(location):
 		location.forecast_df,
 		x='Water Year',
 		y='Index',
-		# color="transducer_id",
+		color="Year type",
+		color_discrete_map=water_year_colors,
 		# size=3
 	)
-	fig2.update_traces(marker_size=8,marker_line_width=2,marker_line_color='DarkSlateGrey',marker_color='MediumPurple')
+	fig2.update_traces(
+		marker_size=16,
+		marker_line_width=4,
+		marker_line_color='DarkSlateGrey',
+		# marker_color='MediumPurple'
+		)
 
 	fig = go.Figure(data=fig1.data + fig2.data)
+	# only show Index on hover
+	# fig.update_traces(hovertemplate=)
+
+	fig.update_layout(hovermode="x unified")
+
 	return fig
 
 def display_elements(location):
@@ -132,8 +152,10 @@ st.title('California Water Supply Index')
 y_max, y_min = 1900,2025
 # y_max, y_min = int(water_years.max()), int(water_years.min())
 years = st.slider('Water Year',min_value=y_min,max_value=y_max,value=[y_min,y_max])
+st.markdown("Bar chart shows reconstructed values. Scatter plot shows forecast values. Hover over a point to see the index values.")
 
 SJ_tab,SV_tab = st.tabs(['San Joaquin Valley','Sacramento Valley'])
+
 with SJ_tab:
 	L = Location('San Joaquin Valley',reconstructed_cols=[0,7,8,9,10,11],forecast_cols=[0,13,15],years=years)
 	display_elements(L)
