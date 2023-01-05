@@ -45,6 +45,7 @@ class Location:
 		
 	def reconstructed(self):
 		table = self.tables[3]
+		st.markdown(table)
 		table = BeautifulSoup(table).find_all('p')[0]
 		rows = [i.split('   ') for i in table.text.split('\r\n')[9:]]
 		df = pd.DataFrame(rows)
@@ -110,19 +111,17 @@ def display_elements(location):
 		st.markdown(f"## Forecast Values")
 		st.dataframe(location.forecast_df.style.format(subset=['Index'], formatter="{:.2f}"))
 
-
-SV = Location('Sacramento Valley',reconstructed_cols=[0,1,2,3,4,5],forecast_cols=[0,4,6])
-SJ = Location('San Joaquin Valley',reconstructed_cols=[0,7,8,9,10,11],forecast_cols=[0,13,15])
-
 st.title('California Water Supply Index')
 SJ_tab,SV_tab = st.tabs(['San Joaquin Valley','Sacramento Valley'])
 
 
 with SJ_tab:
+	SJ = Location('San Joaquin Valley',reconstructed_cols=[0,7,8,9,10,11],forecast_cols=[0,13,15])
 	display_elements(SJ)
 	
 
 with SV_tab:
+	SV = Location('Sacramento Valley',reconstructed_cols=[0,1,2,3,4,5],forecast_cols=[0,4,6])
 	display_elements(SV)
 
 st.markdown(f"Original data: [California Department of Water Resources]({url})")
