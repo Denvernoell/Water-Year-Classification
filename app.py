@@ -44,10 +44,11 @@ class Location:
 			# st.markdown(self.tables[11])
 		
 	def reconstructed(self):
-		table = self.tables[3]
+		table_text = self.tables[3]
+		# st.markdown(table)
 		try:	
 			# st.markdown(table)
-			table = BeautifulSoup(table).find_all('p')[0]
+			table = BeautifulSoup(table_text,features="lxml").find_all('p')[0]
 			rows = [i.split('   ') for i in table.text.split('\r\n')[9:]]
 			df = pd.DataFrame(rows)
 			# display(df)
@@ -61,13 +62,13 @@ class Location:
 			self.reconstructed_df = data
 		except Exception as e:
 			st.error(f"Error loading data for {self.name}\n{e}")
-			st.markdown(self.tables[3])
+			st.markdown(table_text)
 		
 	def forecast(self):
-		table = self.tables[11]
+		table_text = self.tables[11]
+		# st.markdown(table)
 		try:
-				
-			table = BeautifulSoup(table).find_all('p')[0]	
+			table = BeautifulSoup(table_text,features="lxml").find_all('p')[0]	
 			rows = [i.split('   ') for i in table.text.split('\r\n')[3:]]
 			df = pd.DataFrame(rows)
 			# data = df[[self.reconstructed_cols]]
@@ -78,7 +79,7 @@ class Location:
 			self.forecast_df = data
 		except Exception as e:
 			st.error(f"Error loading data for {self.name}\n{e}")
-			st.markdown(self.tables[11])
+			st.markdown(table_text)
 
 
 def plot_location(location):
