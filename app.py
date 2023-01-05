@@ -36,10 +36,12 @@ class Location:
 		try:
 			self.forecast()
 			self.reconstructed()
-		except:
-			st.error(f"Error loading data for {self.name}")
-			st.markdown(self.tables[3])
-			st.markdown(self.tables[11])
+		except Exception as e:
+			st.error(f"Error loading data for {self.name}\n{e}")
+			
+
+			# st.markdown(self.tables[3])
+			# st.markdown(self.tables[11])
 		
 	def reconstructed(self):
 		table = self.tables[3]
@@ -58,7 +60,7 @@ class Location:
 		
 	def forecast(self):
 		table = self.tables[11]
-		table = BeautifulSoup(table).find_all('p')[0]
+		table = BeautifulSoup(table).find_all('p')[0]	
 		rows = [i.split('   ') for i in table.text.split('\r\n')[3:]]
 		df = pd.DataFrame(rows)
 		# data = df[[self.reconstructed_cols]]
