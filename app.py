@@ -4,14 +4,21 @@ import requests
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+st.set_page_config(
+		page_title="California Water Supply Index",
+		layout="wide",
+		page_icon="🌊",
+	)
 
-url = 'https://cdec.water.ca.gov/reportapp/javareports?name=wsihist'
-R = requests.get(url)
-soup = BeautifulSoup(R.text,'html.parser')
-pres = soup.find_all('pre')
+def get_tables():
+	url = 'https://cdec.water.ca.gov/reportapp/javareports?name=wsihist'
+	R = requests.get(url)
+	soup = BeautifulSoup(R.text,'html.parser')
+	pres = soup.find_all('pre')
 
-T = pres[0]
-brs = T.string.split('\r\n\r\n')
+	T = pres[0]
+	brs = T.string.split('\r\n\r\n')
+	return brs
 
 abbrs = {
 	"W":"Wet Year",
@@ -25,11 +32,17 @@ class Location:
 		self.name = name
 		self.reconstructed_cols = reconstructed_cols
 		self.forecast_cols = forecast_cols
-		self.forecast()
-		self.reconstructed()
+		self.tables = get_tables()
+		try:
+			self.forecast()
+			self.reconstructed()
+		except:
+			st.error(f"Error loading data for {self.name}")
+			st.markdown(self.tables[3])
+			st.markdown(self.tables[11])
 		
 	def reconstructed(self):
-		table = brs[3]
+		table = self.tables[3]
 		table = BeautifulSoup(table).find_all('p')[0]
 		rows = [i.split('   ') for i in table.text.split('\r\n')[9:]]
 		df = pd.DataFrame(rows)
@@ -44,7 +57,7 @@ class Location:
 		self.reconstructed_df = data
 		
 	def forecast(self):
-		table = brs[11]
+		table = self.tables[11]
 		table = BeautifulSoup(table).find_all('p')[0]
 		rows = [i.split('   ') for i in table.text.split('\r\n')[3:]]
 		df = pd.DataFrame(rows)
@@ -55,14 +68,6 @@ class Location:
 		data['Year type'] = data['Year type'].pipe(lambda x: x.str.strip().map(abbrs))
 		self.forecast_df = data
 		
-
-
-
-
-# SV.forecast_df
-# SV.reconstructed_df
-# .map(abbrs)
-
 
 
 def plot_location(location):
@@ -77,19 +82,6 @@ def plot_location(location):
 		
 	)
 
-	# fig1 = go.Figure()
-	# rec = location.reconstructed_df
-	# fig1.add_trace(go.Bar(
-	# 	x=rec['Water Year'],
-	# 	y=rec['Index'],
-	# 	# color=rec["Year type"],
-	# 	marker_color=rec["Year type"],
-	# 	xperiod="Y1",
-	#     xperiodalignment="middle",
-	# 	# symbol="point_id",
-		
-	# ))
-	# fig1.update_xaxes(tickmode='linear', ticklabelmode="period")
 	fig1.update_traces(width=.7)
 
 	fig2 = px.scatter(
@@ -120,11 +112,6 @@ def display_elements(location):
 SV = Location('Sacramento Valley',reconstructed_cols=[0,1,2,3,4,5],forecast_cols=[0,4,6])
 SJ = Location('San Joaquin Valley',reconstructed_cols=[0,7,8,9,10,11],forecast_cols=[0,13,15])
 
-st.set_page_config(
-		page_title="California Water Supply Index",
-		layout="wide",
-		page_icon="🌊",
-	)
 st.title('California Water Supply Index')
 SJ_tab,SV_tab = st.tabs(['San Joaquin Valley','Sacramento Valley'])
 
