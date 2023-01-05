@@ -153,7 +153,9 @@ def display_elements(location):
 st.title('California Water Supply Index')
 # water_years = self.reconstructed_df['Water Year']
 # water_years = [1900,2025]
-y_max, y_min = 1900,2025
+import datetime
+now = datetime.datetime.now()
+y_max, y_min = 1900,now.year
 # y_max, y_min = int(water_years.max()), int(water_years.min())
 years = st.slider('Water Year',min_value=y_min,max_value=y_max,value=[y_min,y_max])
 st.markdown("Bar chart shows reconstructed values. Scatter plot shows forecast values. Hover over a point to see the index values.")
